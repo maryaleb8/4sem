@@ -1,11 +1,14 @@
 #!/usr/bin/python3
 
 import os.path as op
+import sqlite3
 import sys
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication, QLabel, QListWidgetItem #<-класс всех строчек ну конкретно тут
 from PyQt5 import uic
+
+DB_PATH = '/tmp/test.s3db'
 
 def resource_path(res_name):
     return op.join(op.dirname(__file__), res_name)
@@ -19,12 +22,15 @@ class MainWindow(MainForm):
         # Create and Initialise UI elements
         self.ui = MainFormUI() #создали экземпляр MainFormUI() скобки означают создание
         self.ui.setupUi(self)
-        #attach event handlers
+        # Attach event handlers
         self.ui.execute_button.clicked.connect(self.__execute)
         self.ui.query_history.itemDoubleClicked.connect(self.__edit)
+        # Connect to our database:
+        self.__dbc = sqlite3.connect(DB_PATH)
 
     def __del__(self): #деструктор
         self.ui = None #удаление указателя на ui чтобы удалилось то на что он ссылается
+        self.__dbc.close()
 
     def __edit(self):#редактирование прошлого запроса
         item = self.ui.query_history.currentItem()#если кликнули а это не текст, а лабуда
@@ -39,10 +45,31 @@ class MainWindow(MainForm):
         text = query.text().strip() #get text from string in window, delete whitespace
         if len(text) == 0: #если ничего после обрезания пробелов не осталось тоже ничего не делаем
             return
-        # add query to history:
         history.addItem(text)
-        #clear input box
-        query.setText('')
+        # Try to execute query:
+        try:
+            cur = self.__dbc.cursor()
+            cur.execute(text)
+            self.__dbc.commit()
+            result = cur.fetchall()
+            error = None
+        except Exception as exc:
+            result = None
+            error = str(exc)
+        # Display query result or error message:
+        if error is None:
+            # Add query to history and clear input box
+            query.setText('')
+            # Add query result if it's not empty:
+            if len(result) > 0:
+                history.addItem(str(result))
+        else:
+            # Let's display waring in red:
+            result_text = f'<span style="color: red;"><b>{error}</b></span>'
+            label = QLabel(result_text)
+            list_item = QListWidgetItem()
+            history.addItem(list_item)
+            history.setItemWidget(list_item, label)
 
     def keyPressEvent(self, event): #что будет происходмть при назажии на энтр
         key = event.key()
