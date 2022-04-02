@@ -61,15 +61,27 @@ class MainWindow(MainForm):
             # Add query to history and clear input box
             query.setText('')
             # Add query result if it's not empty:
-            if len(result) > 0:
-                history.addItem(str(result))
+            if len(result) == 0:
+                return
+            result_text = '<table border=l>'
+            for row in result:
+                result_text += '<tr>'
+                result_text += ''.join(f'<td>{cell}</td>' for cell in row)
+                result_text += '</tr>'
+            result_text += '</table>'
         else:
+            #FIXME: error могут быть особые символы, например, скобки
             # Let's display waring in red:
             result_text = f'<span style="color: red;"><b>{error}</b></span>'
-            label = QLabel(result_text)
-            list_item = QListWidgetItem()
-            history.addItem(list_item)
-            history.setItemWidget(list_item, label)
+        label = QLabel(result_text)
+        list_item = QListWidgetItem()
+        # Set proper dimensions for these wwidgets:
+        label_size_hint = label.sizeHint()
+        label.resize(label_size_hint)
+        list_item.setSizeHint(label_size_hint)
+        # Add widget to history:
+        history.addItem(list_item)
+        history.setItemWidget(list_item, label)
 
     def keyPressEvent(self, event): #что будет происходмть при назажии на энтр
         key = event.key()
