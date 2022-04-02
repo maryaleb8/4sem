@@ -3,6 +3,7 @@
 import os.path as op
 import sys
 
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication
 from PyQt5 import uic
 
@@ -42,6 +43,14 @@ class MainWindow(MainForm):
         history.addItem(text)
         #clear input box
         query.setText('')
+
+    def keyPressEvent(self, event): #что будет происходмть при назажии на энтр
+        key = event.key()
+        if key == Qt.Key_Return or key == Qt.Key_Enter:
+            if self.ui.query_text.hasFocus():#если стоял курсор в вводе текста то выполняем
+                self.__execute()
+            elif self.ui.query_history.hasFocus():#если курсор стоял в истории редактируем
+                self.__edit()
 
 def main():
     app = QApplication(sys.argv)
