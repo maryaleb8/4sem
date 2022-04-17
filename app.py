@@ -74,7 +74,7 @@ class MainWindow(MainForm):
                 #table body
                 for row in result:
                     result_text += '<tr>'
-                    result_text += ''.join('<td>'+ html.escape(cell) + '</td>' for cell in row)
+                    result_text += ''.join('<td>'+ html.escape(str(cell)) + '</td>' for cell in row)
                     result_text += '</tr>'
                 result_text += '</table>'
         else:
