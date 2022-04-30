@@ -29,12 +29,26 @@ class MainWindow(MainForm):
 
 
     def replace_form(self, new_form):
+        new_form.setParent(self)
         self.ui.grid.replaceWidget(self.__current_form, new_form)
         self.__current_form.setParent(None)
         self.__current_form = new_form
 
 class FirstForm(FirstFormBase):
+    __instance = None
+
+    @classmethod #можифицирует следующую функцию, она будет для всего класса, а не для экземпляра
+    def get_instance(cls):
+        if cls.__instance is None:
+            cls()
+        return cls.__instance
+
     def __init__(self, parent=None):
+        #singleton pattern
+        cls = type(self)
+        if cls.__instance is not None:
+            raise Exception('attempt to create second instance')
+        cls.__instance = self
         # Initialize base form:
         super().__init__(parent)
         # Create and initialize UI elements:
@@ -48,10 +62,23 @@ class FirstForm(FirstFormBase):
 
     def __switch_to_form_two(self):
         parent = self.parent()
-        parent.replace_form(SecondForm(parent))
+        parent.replace_form(SecondForm.get_instance())
 
 class SecondForm(SecondFormBase):
+    __instance = None
+
+    @classmethod #можифицирует следующую функцию, она будет для всего класса, а не для экземпляра
+    def get_instance(cls):
+        if cls.__instance is None:
+            cls()
+        return cls.__instance
+
     def __init__(self, parent=None):
+        #singleton pattern
+        cls = type(self)
+        if cls.__instance is not None:
+            raise Exception('attempt to create second instance')
+        cls.__instance = self
         # Initialize base form:
         super().__init__()
         # Create and initialize UI elements:
@@ -64,8 +91,7 @@ class SecondForm(SecondFormBase):
         self.ui = None
 
     def __switch_to_form_one(self):
-        parent = self.parent()
-        parent.replace_form(FirstForm(parent))
+        self.parent().replace_form(FirstForm.get_instance())
 
 def main():
     app = QApplication(sys.argv)
